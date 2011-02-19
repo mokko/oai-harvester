@@ -6,20 +6,39 @@
 
 	<xsl:output method="xml" version="1.0" encoding="UTF-8"
 		indent="yes" />
-	<xsl:strip-space elements="*"/>
+	<xsl:strip-space elements="*" />
 
 	<!-- metadata is double in my harvester. This is the quickest and dirtiest fix -->
 
+	<!--
+		oai_dc cannot easily be unwrapped. The format can only describe one resource
+		per xml document (file).
+
+		Unwrapping originally intended to write a ListRecord into one file. I could
+		however write to multiple files, however this is not possible in xslt1
+
+		In XSLT2, I could write each record to a separate file named according to
+		identifier. A further disadvantage is that unwrapping is not format agnostic
+		anymore. Unless we always employ the multiple result documents strategy.
+
+		If we do, then I could just as well avoid xslt altogether in the unwrapper and
+		simply use HTTP::OAI accessor to the metadata, probably with the callback
+		onRecord.
+
+		Some formats could still be unwrapped into a single file, e.g. mpx or lido.
+	-->
+
 	<xsl:template match="/">
-			<xsl:apply-templates
-				select="/oai:OAI-PMH/oai:GetRecord/oai:record/oai:metadata/oai:metadata/*" />
-			<xsl:apply-templates
-				select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*" />
+		<xsl:apply-templates
+			select="/oai:OAI-PMH/oai:GetRecord/oai:record/oai:metadata/oai:metadata/*" />
+		<xsl:apply-templates
+			select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*" />
 	</xsl:template>
+
 
 	<xsl:template match="@*|node()">
 		<xsl:copy>
-			<xsl:apply-templates/>
+			<xsl:apply-templates />
 		</xsl:copy>
 	</xsl:template>
 </xsl:stylesheet>

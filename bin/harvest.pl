@@ -7,7 +7,6 @@ use HTTP::OAI::Repository qw/validate_request/;
 use HTTP::OAI::Headers;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 use Getopt::Std;
-use XML::LibXSLT;
 use FindBin;
 use Cwd 'realpath';
 getopts( 'o:huv', my $opts = {} );
@@ -63,8 +62,10 @@ with GetRecord and ListRecords).
 
 our $config = configSanity( $ARGV[0] );
 my $params = paramsSanity($config);
-#path relative to bindir
-$config->{unwrapXSL} = unwrapXSL('/../xslt/unwrap.xsl');
+
+#path relative to bindir/ change path if necessary
+
+#testing if this solves metadata/metadata problem
 
 #
 # MAIN
@@ -75,7 +76,9 @@ delete $params->{verb};
 
 my $harvester = HTTP::OAI::Harvester->new(
 	'baseURL' => $config->{baseURL},
-	'resume'  => 1
+
+	#always try to resume or make it an confile option?
+	'resume' => 1,
 );
 
 my $response = $harvester->$verb( %{$params} );
@@ -84,8 +87,9 @@ my $response = $harvester->$verb( %{$params} );
 # OUTPUT
 #
 
-my $dom = unwrap($response);
-output($dom);
+if ( !$config->{already} ) {
+	output( $response->toDOM->toString );
+}
 
 #
 # SUBS
@@ -113,32 +117,54 @@ sub configSanity {
 		$config->{output} = $opts->{o};
 	}
 
-	if (!$config->{unwrap}) {
-		verbose "Set unwrap to false since not defined";
-		$config->{unwrap}='false';
+	if ( $config->{unwrap} ) {
+		verbose "Unwrap (conf file): $config->{unwrap}";
+		if ( $config->{unwrap} eq 'true' ) {
+			if ( !-d $config->{output} ) {
+				print "Error: Output has to be dir to unwrap into it";
+				exit 1;
+			}
+		}
+
+	} else {
+		verbose "Unwrap (conf file): not defined -> false";
+		$config->{unwrap} = 'false';
 	}
 
 	return $config;
 }
 
-sub output {
-	my $dom = shift;
+=head2
 
-	if ( !$response ) {
-		print "No response";
-		exit 1;
+Decides it it writes to STDOUT or to file. Is called from main or from unwrap
+per file.
+
+
+=cut
+
+sub output {
+	my $string = shift;
+	my $file   = shift;
+	my $destination=$config->{output};
+	if ($file) {
+		#verbose "called with file: $file";
+		$destination = File::Spec->catfile( $config->{output}, $file );
+	}
+
+	if ( !$string ) {
+		die "Internal Error: Nothing to output!";
 	}
 
 	if ( $config->{output} ) {
-		verbose "Write to file ($config->{output})";
+		verbose "Write to file ($destination)";
 
 		#' > : encoding( UTF- 8 ) ' seems to work without it
-		open( my $fh, ' >> ', $config->{output} ) or die $!;
-		print $fh $dom->toString;
+		open( my $fh, ' >> ', $destination ) or die 'Error: Cannot write to file:'.$config->{output}.$!;
+		print $fh $string;
 		close $fh;
 	} else {
 		verbose "Write STDOUT";
-		print $dom->toString;
+		print $string;
 	}
 }
 
@@ -167,6 +193,33 @@ sub paramsSanity {
 		exit 1;
 	}
 	verbose "Request validates";
+
+	#I had guessed that this callback would be called on
+	my $unwrapCB = sub {
+		my $record = shift;
+		if ($record) {
+			if ( ! $record->status ) {    #not deleted
+				my $fn = $record->identifier;
+
+				#mk filename
+				$fn =~ s/\s/_/; #whitespace in fn not good
+ 				$fn =~ s/:/-/; #colon in filename not good
+				$fn .= '.xml';
+				#verbose "About to write ($fn)";
+				if ( $record->metadata ) {
+					#don't write output again since already written
+					$config->{already} = 'true';
+					output( $record->metadata->toString, $fn );
+				}
+			}
+		}
+	};
+
+	if ( $config->{unwrap} eq 'true' ) {
+		$params->{onRecord} = $unwrapCB;
+		#$params->{handlers}->{metadata} = undef;
+	}
+
 	return $params;
 }
 
@@ -184,52 +237,3 @@ sub verbose {
 		}
 	}
 }
-
-=head2 my $dom=unwrap ($response);
-
-Expects a HTTP::OAI::Response object and returns a dom. If the conditions are
-right it returns a transformation. It might also just write transformation to
-file and be done with it.
-
-=cut
-
-sub unwrap {
-	my $response = shift;
-	if ( $config->{unwrap} eq 'true' ) {
-		if (   $config->{verb} eq 'GetRecord'
-			or $config->{verb} eq 'ListRecords' )
-		{
-			return _unwrap( $response->toDOM );
-		}
-	}
-	return $response->toDOM;
-}
-
-sub _unwrap {
-	my $source    = shift; #supposed to be dom
-	my $xslt      = XML::LibXSLT->new();
-	my $style_doc = XML::LibXML->load_xml(
-		location => $config->{unwrapXSL},
-		no_cdata => 1
-	);
-	my $stylesheet = $xslt->parse_stylesheet($style_doc);
-	my $result     = $stylesheet->transform($source);
-	if ( $config->{output} ) {
-		verbose "Writing unwrapped version to file ($config->{output})";
-		$stylesheet->output_file($result, $config->{output});
-		exit;
-	}
-	return $result; #supposed to be a XML::LibXML::Document
-}
-
-=head2 my $fullpath=unwrapXSL ($path);
-
-Expects a relative path, relative to bindir
-
-=cut
-
-sub unwrapXSL {
-	my $path = shift;
-	return realpath( $FindBin::Bin . $path );
-}
-
