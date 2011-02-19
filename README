@@ -1,0 +1,4 @@
+This is a very simple OAI harverster written in perl, based on Tim Brody's
+great HTTP::OAI. It comes with a few other small and simple perl scripts
+which I use to deal with my oai/xml workflow.
+

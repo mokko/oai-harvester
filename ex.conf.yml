@@ -1,0 +1,9 @@
+#baseURL: 'http://spk.mimo-project.eu:8080/oai'
+baseURL: 'http://localhost:3000/oai'
+verb: 'ListRecords'
+metadataPrefix: 'lido'
+#output: 'o.xml'
+
+
+
+
