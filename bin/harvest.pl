@@ -11,6 +11,8 @@ use FindBin;
 use Cwd 'realpath';
 getopts( 'o:huv', my $opts = {} );
 
+use XML::SAX::Writer;
+
 sub verbose;
 
 =head1 NAME
@@ -28,14 +30,16 @@ harvest conf.yml
 Is in yaml format. Can have the following parameters. Use with sense according
 to OAI Specification Version 2
 
-	baseURL (required): URL
-	from: oai datestamp
+	baseURL (required): 'URL'
+	from: a oai datestamp
 	metadataPrefix: prefix
 	output: path, if specified output will be written to file
 	set: setSpec
 	to: oai datestamp
 	verb (required): OAI verb
-	unwrap: true
+	unwrap: true or false
+	resume: true or false
+
 
 Output file can be overwritten with -o option on commandline.
 
@@ -74,12 +78,15 @@ my $params = paramsSanity($config);
 my $verb = $params->{verb};
 delete $params->{verb};
 
-my $harvester = HTTP::OAI::Harvester->new(
-	'baseURL' => $config->{baseURL},
+my $harvester;
+{
+	my %args = ( 'baseURL' => $config->{baseURL}, );
 
-	#always try to resume or make it an confile option?
-	'resume' => 1,
-);
+	$config->{resume} eq 'true'
+	  ? $args{resume} = 1
+	  : $args{resume} = 0;
+	$harvester = HTTP::OAI::Harvester->new(%args);
+}
 
 my $response = $harvester->$verb( %{$params} );
 
@@ -117,9 +124,20 @@ sub configSanity {
 		$config->{output} = $opts->{o};
 	}
 
+	if ( $config->{output} ) {
+		verbose "Output: ".$config->{output};
+	} else {
+		#init output even if empty to avoid uninitialized warning
+		$config->{output} = '';
+		verbose "Output: STDOUT";
+	}
+
+
+
 	if ( $config->{unwrap} ) {
 		verbose "Unwrap (conf file): $config->{unwrap}";
 		if ( $config->{unwrap} eq 'true' ) {
+			die "Error: Unwrap does not YET work as expected";
 			if ( !-d $config->{output} ) {
 				print "Error: Output has to be dir to unwrap into it";
 				exit 1;
@@ -130,6 +148,11 @@ sub configSanity {
 		verbose "Unwrap (conf file): not defined -> false";
 		$config->{unwrap} = 'false';
 	}
+
+	if ( !$config->{resume} ) {
+		$config->{resume} = 'false';
+	}
+	verbose "Resume (conf file): $config->{resume}";
 
 	return $config;
 }
@@ -143,10 +166,11 @@ per file.
 =cut
 
 sub output {
-	my $string = shift;
-	my $file   = shift;
-	my $destination=$config->{output};
+	my $string      = shift;
+	my $file        = shift;
+	my $destination = $config->{output};
 	if ($file) {
+
 		#verbose "called with file: $file";
 		$destination = File::Spec->catfile( $config->{output}, $file );
 	}
@@ -159,7 +183,8 @@ sub output {
 		verbose "Write to file ($destination)";
 
 		#' > : encoding( UTF- 8 ) ' seems to work without it
-		open( my $fh, ' >> ', $destination ) or die 'Error: Cannot write to file:'.$config->{output}.$!;
+		open( my $fh, ' >> ', $destination )
+		  or die 'Error: Cannot write to file:' . $destination . $!;
 		print $fh $string;
 		close $fh;
 	} else {
@@ -198,17 +223,20 @@ sub paramsSanity {
 	my $unwrapCB = sub {
 		my $record = shift;
 		if ($record) {
-			if ( ! $record->status ) {    #not deleted
+			if ( !$record->status ) {    #not deleted
 				my $fn = $record->identifier;
 
 				#mk filename
-				$fn =~ s/\s/_/; #whitespace in fn not good
- 				$fn =~ s/:/-/; #colon in filename not good
+				$fn =~ s/\s/_/;          #whitespace in fn not good
+				$fn =~ s/:/-/;           #colon in filename not good
 				$fn .= '.xml';
-				#verbose "About to write ($fn)";
+
 				if ( $record->metadata ) {
+
 					#don't write output again since already written
 					$config->{already} = 'true';
+
+					#verbose "About to write ($fn)";
 					output( $record->metadata->toString, $fn );
 				}
 			}
@@ -217,6 +245,7 @@ sub paramsSanity {
 
 	if ( $config->{unwrap} eq 'true' ) {
 		$params->{onRecord} = $unwrapCB;
+
 		#$params->{handlers}->{metadata} = undef;
 	}
 
