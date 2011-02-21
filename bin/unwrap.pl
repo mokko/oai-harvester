@@ -7,7 +7,7 @@ use XML::LibXSLT;
 use FindBin;
 use Cwd 'realpath';
 use Getopt::Std;
-getopts( 'o:hv', my $opts = {} );
+getopts( 'hv', my $opts = {} );
 
 sub verbose;
 
@@ -51,9 +51,8 @@ if ( !-f $ARGV[0] ) {
 	exit 1;
 }
 
-if ( !$opts->{o} ) {
-	print "Error: You did not specify output!\n";
-	exit 1;
+if ( !$ARGV[1] ) {
+	verbose "You didnot specify output, so will be using STDOUT!";
 }
 
 #
@@ -67,11 +66,24 @@ my $style_doc =
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
 my $result = $stylesheet->transform($source) or die "Problems!".@!;
 #print "result:".$result->toString."\n";
-$stylesheet->output_file($result, $opts->{o}) or die "Cannot write file ($opts->{o})";
+output ($result);
+exit;
+
 
 #
 # SUBS
 #
+
+sub output {
+	my $result=shift;
+	if ($ARGV[1]) {
+		$result->toFile ($ARGV[1], '1') or die "Cannot write $ARGV[1]";
+		#1 is a readable format, use 0 to save space
+		#$stylesheet->output_file($result, $ARGV[1]) or die "Cannot write file ($ARGV[1])";
+	} else {
+		print $result->toString;
+	}
+}
 
 sub verbose {
 	my $msg = shift;
