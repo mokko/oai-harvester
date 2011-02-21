@@ -65,8 +65,9 @@ my $source = XML::LibXML->load_xml( location => $ARGV[0] );
 my $style_doc =
   XML::LibXML->load_xml( location => $XSL, no_cdata => 1 );
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
-my $result = $stylesheet->transform($source);
-$stylesheet->output_file($result, $opts->{o});
+my $result = $stylesheet->transform($source) or die "Problems!".@!;
+#print "result:".$result->toString."\n";
+$stylesheet->output_file($result, $opts->{o}) or die "Cannot write file ($opts->{o})";
 
 #
 # SUBS

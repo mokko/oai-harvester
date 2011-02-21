@@ -12,6 +12,7 @@ sub verbose;
 my $catalog={
 	lido=>'http://www.lido-schema.org/schema/v1.0/lido-v1.0.xsd',
 	oai=>'http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd',
+	mpx=>'file:/home/mengel/projects/MPX/latest/mpx.xsd',
 };
 
 

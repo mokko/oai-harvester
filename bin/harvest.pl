@@ -124,6 +124,7 @@ sub configSanity {
 		$config->{output} = $opts->{o};
 	}
 
+	#ensure that there is the output key
 	if ( $config->{output} ) {
 		verbose "Output: ".$config->{output};
 	} else {
@@ -132,7 +133,11 @@ sub configSanity {
 		verbose "Output: STDOUT";
 	}
 
-
+	#delete old file if any
+	#if (-f $config->{output}) {
+	#	verbose "delete old file";
+	#	unlink $config->{output}
+	#}
 
 	if ( $config->{unwrap} ) {
 		verbose "Unwrap (conf file): $config->{unwrap}";
@@ -181,9 +186,8 @@ sub output {
 
 	if ( $config->{output} ) {
 		verbose "Write to file ($destination)";
-
 		#' > : encoding( UTF- 8 ) ' seems to work without it
-		open( my $fh, ' >> ', $destination )
+		open( my $fh, '> ', $destination )
 		  or die 'Error: Cannot write to file:' . $destination . $!;
 		print $fh $string;
 		close $fh;

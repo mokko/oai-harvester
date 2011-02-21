@@ -11,8 +11,8 @@
 	<!-- metadata is double in my harvester. This is the quickest and dirtiest fix -->
 
 	<!--
-		oai_dc cannot easily be unwrapped. The format can only describe one resource
-		per xml document (file).
+		oai_dc cannot correcntly and easily be unwrapped into a single document. The
+		format can only describe one resource per xml document (file).
 
 		Unwrapping originally intended to write a ListRecord into one file. I could
 		however write to multiple files, however this is not possible in xslt1
@@ -29,16 +29,31 @@
 	-->
 
 	<xsl:template match="/">
-		<xsl:apply-templates
-			select="/oai:OAI-PMH/oai:GetRecord/oai:record/oai:metadata/oai:metadata/*" />
-		<xsl:apply-templates
-			select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*" />
+		<xsl:copy>
+			<xsl:apply-templates
+				select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*" />
+		</xsl:copy>
 	</xsl:template>
 
+	<xsl:template
+		match="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*">
+		<xsl:if test="position()=1">
+			<xsl:message select="'one time'" />
+			<xsl:copy>
+				<xsl:apply-templates
+					select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
+					<xsl:sort select="name()" />
+				</xsl:apply-templates>
+				<xsl:apply-templates
+					select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
+					<xsl:sort select="name()" />
+				</xsl:apply-templates>
+			</xsl:copy>
+		</xsl:if>
+	</xsl:template>
 
-	<xsl:template match="@*|node()">
-		<xsl:copy>
-			<xsl:apply-templates />
-		</xsl:copy>
+	<xsl:template match="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
+			<xsl:message select="'100 times',name()" />
+		<xsl:copy-of select="." />
 	</xsl:template>
 </xsl:stylesheet>
