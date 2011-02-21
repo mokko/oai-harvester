@@ -18,7 +18,7 @@ unwrap.pl - Little script that "unwraps" the metadata inside of a OAI response
 
 =head1 SYNOPSIS
 
-unwrap.pl -o file.xml -v file.oai.xml
+unwrap.pl -v input.oai.xml output.xml
 
 =cut
 
