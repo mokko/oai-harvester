@@ -11,8 +11,6 @@ use FindBin;
 use Cwd 'realpath';
 getopts( 'o:huv', my $opts = {} );
 
-use XML::SAX::Writer;
-
 sub verbose;
 
 =head1 NAME
