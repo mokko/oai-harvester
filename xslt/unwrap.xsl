@@ -38,7 +38,6 @@
 	<xsl:template
 		match="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*">
 		<xsl:if test="position()=1">
-			<xsl:message select="'one time'" />
 			<xsl:copy>
 				<xsl:apply-templates
 					select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
@@ -53,7 +52,6 @@
 	</xsl:template>
 
 	<xsl:template match="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
-			<xsl:message select="'100 times',name()" />
 		<xsl:copy-of select="." />
 	</xsl:template>
 </xsl:stylesheet>

@@ -11,7 +11,7 @@ use Cwd 'realpath';
 use File::Spec 'catfile';
 sub verbose;
 
-use Data::Dumper qw/Dumper/;
+#use Data::Dumper qw/Dumper/;
 
 our $catalog = load_catalog('validate.yml');
 
