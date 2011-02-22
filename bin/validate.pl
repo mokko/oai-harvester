@@ -15,7 +15,6 @@ sub verbose;
 
 our $catalog = load_catalog('validate.yml');
 
-
 =head1 NAME
 
 validate.pl - Bring LibXML::Schema to the commandline
@@ -49,6 +48,7 @@ my $location = lookup( $ARGV[1] );
 
 verbose "Check $ARGV[0]";
 verbose "  against $location";
+
 #		verbose Dumper $catalog;
 
 #
@@ -93,16 +93,17 @@ sub lookup {
 	my $input = shift;    #prefix or location
 	if ( $catalog->{ $ARGV[1] } ) {
 
-		my $location=$input;     #prefer cache over location
+		my $location = $input;    #prefer cache over location
 		if ( $catalog->{ $ARGV[1] }->{location} ) {
 			$location = $catalog->{ $ARGV[1] }->{location};
+			#verbose "location: $catalog->{ $ARGV[1] }->{location}";
 		}
 		if ( $catalog->{ $ARGV[1] }->{cache} ) {
 			$location = $catalog->{ $ARGV[1] }->{cache};
+			#verbose "cache: $catalog->{ $ARGV[1] }->{cache}";
 		}
-		$location
-		  ? verbose "Replace $input with $location"
-		  : verbose "Use $input for location";
+
+		verbose "Replace $input with $location";
 
 		return $location;
 	}

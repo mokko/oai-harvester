@@ -6,6 +6,9 @@ use XML::LibXSLT;
 use XML::LibXML;
 sub verbose;
 
+warn "by all means: use libXSLT's xsltproc or Michael Kay's saxon instead!";
+
+
 =head1 NAME
 
 transform.pl - Small script that brings libXML's xslt to the commandline

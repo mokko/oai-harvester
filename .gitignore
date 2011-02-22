@@ -1,4 +1,6 @@
 *~
 #*
-xml/*
+xml-unwrapped/*
+xml-oai/*
 conf/*
+bak/*

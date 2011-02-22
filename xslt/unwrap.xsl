@@ -32,6 +32,8 @@
 		<xsl:copy>
 			<xsl:apply-templates
 				select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*" />
+			<xsl:apply-templates
+				select="/oai:OAI-PMH/oai:GetRecord/oai:record/oai:metadata/oai:metadata/*" />
 		</xsl:copy>
 	</xsl:template>
 
@@ -43,15 +45,31 @@
 					select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
 					<xsl:sort select="name()" />
 				</xsl:apply-templates>
+			</xsl:copy>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template
+		match="/oai:OAI-PMH/oai:GetRecord/oai:record/oai:metadata/oai:metadata/*">
+		<xsl:if test="position()=1">
+			<xsl:copy>
 				<xsl:apply-templates
-					select="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
+					select="/oai:OAI-PMH/oai:GetRecord/oai:record/oai:metadata/oai:metadata/*/*">
 					<xsl:sort select="name()" />
 				</xsl:apply-templates>
 			</xsl:copy>
 		</xsl:if>
 	</xsl:template>
 
-	<xsl:template match="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
+
+	<xsl:template
+		match="/oai:OAI-PMH/oai:ListRecords/oai:record/oai:metadata/oai:metadata/*/*">
 		<xsl:copy-of select="." />
 	</xsl:template>
+
+	<xsl:template
+		match="/oai:OAI-PMH/oai:GetRecord/oai:record/oai:metadata/oai:metadata/*/*">
+		<xsl:copy-of select="." />
+	</xsl:template>
+
 </xsl:stylesheet>
