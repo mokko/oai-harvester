@@ -2,13 +2,18 @@
 
 use strict;
 use warnings;
+
+use Cwd 'realpath';
+use File::Spec;
+use FindBin;
+use Getopt::Std;
 use HTTP::OAI;
 use HTTP::OAI::Repository qw/validate_request/;
 use HTTP::OAI::Headers;
+use XML::LibXSLT;
+use XML::LibXML;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
-use Getopt::Std;
-use FindBin;
-use Cwd 'realpath';
+
 getopts( 'o:huv', my $opts = {} );
 
 sub verbose;
@@ -92,9 +97,8 @@ my $response = $harvester->$verb( %{$params} );
 # OUTPUT
 #
 
-if ( !$config->{already} ) {
-	output( $response->toDOM->toString );
-}
+my $dom = unwrap($response);
+output( $dom->toString );
 
 #
 # SUBS
@@ -124,8 +128,9 @@ sub configSanity {
 
 	#ensure that there is the output key
 	if ( $config->{output} ) {
-		verbose "Output: ".$config->{output};
+		verbose "Output: " . $config->{output};
 	} else {
+
 		#init output even if empty to avoid uninitialized warning
 		$config->{output} = '';
 		verbose "Output: STDOUT";
@@ -138,13 +143,17 @@ sub configSanity {
 	#}
 
 	if ( $config->{unwrap} ) {
-		verbose "Unwrap (conf file): $config->{unwrap}";
 		if ( $config->{unwrap} eq 'true' ) {
-			die "Error: Unwrap does not YET work as expected";
-			if ( !-d $config->{output} ) {
-				print "Error: Output has to be dir to unwrap into it";
+			$config->{unwrapFN} = realpath(
+				File::Spec->catfile(
+					$FindBin::Bin, '..', 'xslt', 'unwrap.xsl'
+				)
+			);
+			if ( !-f $config->{unwrapFN} ) {
+				print "Error: $config->{unwrapFN} not found";
 				exit 1;
 			}
+			verbose "Unwrap (conf file): $config->{unwrap}";
 		}
 
 	} else {
@@ -184,6 +193,7 @@ sub output {
 
 	if ( $config->{output} ) {
 		verbose "Write to file ($destination)";
+
 		#' > : encoding( UTF- 8 ) ' seems to work without it
 		open( my $fh, '> ', $destination )
 		  or die 'Error: Cannot write to file:' . $destination . $!;
@@ -220,38 +230,31 @@ sub paramsSanity {
 		exit 1;
 	}
 	verbose "Request validates";
+	return $params;
+}
 
-	#I had guessed that this callback would be called on
-	my $unwrapCB = sub {
-		my $record = shift;
-		if ($record) {
-			if ( !$record->status ) {    #not deleted
-				my $fn = $record->identifier;
+=head2 $dom=unwrap ($response);
 
-				#mk filename
-				$fn =~ s/\s/_/;          #whitespace in fn not good
-				$fn =~ s/:/-/;           #colon in filename not good
-				$fn .= '.xml';
+Expects a HTTP::OAI response objects and returns a dom object.
 
-				if ( $record->metadata ) {
+=cut
 
-					#don't write output again since already written
-					$config->{already} = 'true';
+sub unwrap {
+	my $response = shift;
+	my $dom      = $response->toDOM;
+	if ( $config->{unwrapFN} ) {
 
-					#verbose "About to write ($fn)";
-					output( $record->metadata->toString, $fn );
-				}
-			}
-		}
-	};
-
-	if ( $config->{unwrap} eq 'true' ) {
-		$params->{onRecord} = $unwrapCB;
-
-		#$params->{handlers}->{metadata} = undef;
+		my $xslt      = XML::LibXSLT->new();
+		my $style_doc = XML::LibXML->load_xml(
+			location => $config->{unwrapFN},
+			no_cdata => 1
+		);
+		my $stylesheet = $xslt->parse_stylesheet($style_doc);
+		$dom = $stylesheet->transform($dom);
+		verbose "unwrapping...";
 	}
 
-	return $params;
+	return $dom;
 }
 
 =head2 verbose "message";

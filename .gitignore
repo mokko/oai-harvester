@@ -4,3 +4,5 @@ xml-unwrapped/*
 xml-oai/*
 conf/*
 bak/*
+tron/*
+xslt/tron/*
