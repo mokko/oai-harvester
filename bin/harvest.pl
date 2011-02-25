@@ -14,9 +14,9 @@ use XML::LibXSLT;
 use XML::LibXML;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 
-getopts( 'o:huv', my $opts = {} );
+getopts( 'o:huv', our $opts = {} );
 
-help() if ($opts->{h});
+help() if ( $opts->{h} );
 
 sub verbose;
 
@@ -291,8 +291,12 @@ sub verbose {
 	}
 }
 
+
+
 =head2 help
+
 =cut
+
 sub help {
 	system "perldoc $0";
 	exit;
@@ -327,3 +331,5 @@ This little scrip is written by Maurice Mengel and should be available on
 github.com/mokko/oai-harvester. It is based on Tim Brody's HTTP::OAI.
 This script comes with absolutely no warranty and is under the same license
 as Larry Wall's Perl 5.12.2. Written in 2011.
+
+=cut

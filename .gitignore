@@ -1,5 +1,6 @@
 *~
 #*
+*.mpx
 xml-unwrapped/*
 xml-oai/*
 conf/*
@@ -7,3 +8,4 @@ bak/*
 tron/*
 xslt/tron/*
 *.exe
+*.zip
