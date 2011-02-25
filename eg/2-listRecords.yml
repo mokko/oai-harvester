@@ -1,0 +1,12 @@
+baseURL: 'http://spk.mimo-project.eu:8080/oai'
+#baseURL: 'http://localhost:3000/oai'
+verb: 'ListRecords'
+set: 78
+metadataPrefix: 'mpx'
+output: 'listRecords.mpx'
+unwrap: 'true'
+resume: 'true'
+
+
+
+

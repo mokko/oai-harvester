@@ -1,0 +1,12 @@
+baseURL: 'http://spk.mimo-project.eu:8080/oai'
+#baseURL: 'http://localhost:3000/oai'
+verb: 'GetRecord'
+identifier: spk-berlin.de:EM-objId-240469
+metadataPrefix: 'mpx'
+#output: 'getRecord.xml'
+#unwrap: 'true'
+#resume: 'true'
+
+
+
+
