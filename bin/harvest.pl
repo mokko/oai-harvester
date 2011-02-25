@@ -16,33 +16,48 @@ use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 
 getopts( 'o:huv', my $opts = {} );
 
+help() if ($opts->{h});
+
 sub verbose;
 
 =head1 NAME
 
-Simple OAI harvester for the commandline
+harvest - Simple OAI harvester for the commandline
 
 =head1 SYNOPSIS
 
-harvest conf.yml
+harvest [-v] conf.yml
 
-	Read the configuration in conf.yml and act accordingly.
+Read the configuration in conf.yml and act accordingly.
+
+=head1 VERSION
+
+0.01
 
 =head1 CONFIGURATION FILE
 
-Is in yaml format. Can have the following parameters. Use with sense according
-to OAI Specification Version 2
+Configuration file contains the oai verb and parameters in easy-to-understand
+yaml format.  It can have the following parameters. Combine them with sense
+according to OAI Specification Version 2 (see below).
 
-	baseURL (required): 'URL'
-	from: a oai datestamp
-	metadataPrefix: prefix
-	output: path, if specified output will be written to file
-	set: setSpec
-	to: oai datestamp
-	verb (required): OAI verb
-	unwrap: true or false
-	resume: true or false
-
+	baseURL (required):
+		a base URL
+	from:
+		a oai datestamp
+	metadataPrefix:
+		prefix
+	output:
+		path, if specified output will be written to specified file
+	set:
+		a setSpec
+	to:
+		oai datestamp
+	verb (required):
+		OAI verb
+	unwrap:
+		true or false
+	resume:
+		true or false
 
 Output file can be overwritten with -o option on commandline.
 
@@ -57,9 +72,13 @@ with GetRecord and ListRecords).
 
 =head2 Command line arguments
 
--h help (todo)
--o output.xml: write to file, supercedes output information in config file
+	-h help (this text)
+	-o output.xml
+		write output to file; supersedes output in config file
 
+=head2 Internal Functions
+
+The following subs are just documented out of habit.
 
 =cut
 
@@ -271,3 +290,40 @@ sub verbose {
 		}
 	}
 }
+
+=head2 help
+=cut
+sub help {
+	system "perldoc $0";
+	exit;
+}
+
+=head1 KNOWN ISSUES
+
+This harvester produces wrong xml. It doubles metadata element. Unwrap will
+not work on all metadata formats, such as oai_dc.
+
+=head1 SEE ALSO
+
+=over
+
+=item
+
+OAI Specification at L<http://www.openarchives.org/OAI/openarchivesprotocol.html>
+
+=item
+
+HTTP::OAI::Repository
+
+=item
+
+HTTP::OAI::DataProvider (GitHub), Salsa_OAI (GitHub)
+
+=back
+
+=head1 COPYRIGHT / LICENSE
+
+This little scrip is written by Maurice Mengel and should be available on
+github.com/mokko/oai-harvester. It is based on Tim Brody's HTTP::OAI.
+This script comes with absolutely no warranty and is under the same license
+as Larry Wall's Perl 5.12.2. Written in 2011.

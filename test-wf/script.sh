@@ -13,23 +13,24 @@
 #bin/unwrap.pl xml-oai/GetRecord61117.xml xml-unwrapped/GetRecord61117.mpx
 #bin/unwrap.pl xml-oai/GetRecord61880.xml xml-unwrapped/GetRecord61880.mpx
 
-echo "validate"
-bin/validate.pl xml-unwrapped/GetRecord61117.mpx mpx
-bin/validate.pl xml-unwrapped/GetRecord61880.mpx mpx
+#echo "validate"
+#bin/validate.pl xml-unwrapped/GetRecord61117.mpx mpx
+#bin/validate.pl xml-unwrapped/GetRecord61880.mpx mpx
 
 #
-# I transform locally here. Alternatively validate online
+# I transform locally here. Alternatively validate online via data provider
 #
 
-echo "transform to lido"
-xsltproc ../Salsa_OAI2/xslt/mpx2lido/mpx2lido.xsl xml-unwrapped/GetRecord61117.mpx > xml-unwrapped/GetRecord61117.lido.xml
-xsltproc ../Salsa_OAI2/xslt/mpx2lido/mpx2lido.xsl xml-unwrapped/GetRecord61880.mpx > xml-unwrapped/GetRecord61880.lido.xml
+#unwrapping now done as part of unwrap.pl
+#echo "transform to lido"
+#xsltproc ../Salsa_OAI2/xslt/mpx2lido/mpx2lido.xsl xml-unwrapped/GetRecord61117.mpx > xml-unwrapped/GetRecord61117.lido.xml
+#xsltproc ../Salsa_OAI2/xslt/mpx2lido/mpx2lido.xsl xml-unwrapped/GetRecord61880.mpx > xml-unwrapped/GetRecord61880.lido.xml
 
 echo "validate"
 bin/validate.pl xml-unwrapped/GetRecord61117.lido.xml lido
 bin/validate.pl xml-unwrapped/GetRecord61880.lido.xml lido
 
-#echo "schematron test"
-#bin/tron.pl xml-unwrapped/GetRecord61117.lido.xml tron/61117.lido.xml
+echo "fine testing transformation"
+prove t/61117.lido.t
 #bin/tron.pl xml-unwrapped/GetRecord61880.lido.xml tron/61880.lido.xml
 
