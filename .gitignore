@@ -6,3 +6,4 @@ conf/*
 bak/*
 tron/*
 xslt/tron/*
+*.exe
