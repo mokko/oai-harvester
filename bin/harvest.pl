@@ -10,8 +10,8 @@ use Getopt::Std;
 use HTTP::OAI;
 use HTTP::OAI::Repository qw/validate_request/;
 use HTTP::OAI::Headers;
-use XML::LibXSLT;
 use XML::LibXML;
+use XML::LibXSLT;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 
 getopts( 'o:huv', our $opts = {} );
