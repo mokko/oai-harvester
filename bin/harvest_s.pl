@@ -156,6 +156,7 @@ sub configSanity {
 
 	if ( $config->{unwrap} ) {
 		if ( $config->{unwrap} eq 'true' ) {
+			die "Unwrap function disabled in this version, use xsltproc or saxon instead";
 			$config->{unwrapFN} = realpath(
 				File::Spec->catfile(
 					$FindBin::Bin, '..', 'xslt', 'unwrap.xsl'

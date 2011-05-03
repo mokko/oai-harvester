@@ -61,11 +61,11 @@ eval { $xmlschema->validate($doc); };
 
 if ($@) {
 	warn "$ARGV[0] failed validation: $@" if $@;
+	exit 1;
 } else {
 	print "$ARGV[0] validates\n";
+	exit 0
 }
-
-exit 0;
 
 #
 # SUBS

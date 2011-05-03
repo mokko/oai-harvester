@@ -28,7 +28,7 @@ harvest - Simple OAI harvester for the commandline
 
 harvest [-v] conf.yml
 
-Read the configuration in conf.yml and act accordingly.
+Read the configuration specified in command line and act accordingly.
 
 =head1 VERSION
 
@@ -39,6 +39,8 @@ Read the configuration in conf.yml and act accordingly.
 Configuration file contains the oai verb and parameters in easy-to-understand
 yaml format.  It can have the following parameters. Combine them with sense
 according to OAI Specification Version 2 (see below).
+
+	OAI STUFF
 
 	baseURL (required):
 		a base URL
@@ -54,9 +56,15 @@ according to OAI Specification Version 2 (see below).
 		oai datestamp
 	verb (required):
 		OAI verb
+	resume:
+		true or false
+
+
+	OTHER STUFF
+
 	unwrap:
 		true or false
-	resume:
+	validate:
 		true or false
 
 Output file can be overwritten with -o option on commandline.
@@ -117,6 +125,9 @@ my $response = $harvester->$verb( %{$params} );
 #
 
 my $dom = unwrap($response);
+
+validate($dom);
+
 output( $dom->toString );
 
 #
@@ -185,14 +196,18 @@ sub configSanity {
 	}
 	verbose "Resume (conf file): $config->{resume}";
 
+	if ( !$config->{validate} ) {
+		$config->{validate} = 'false';
+	}
+	verbose "Validate (conf file): $config->{validate}";
+
 	return $config;
 }
 
 =head2
 
-Decides it it writes to STDOUT or to file. Is called from main or from unwrap
+Decides if it writes to STDOUT or to file. Is called from main or from unwrap
 per file.
-
 
 =cut
 
@@ -215,7 +230,7 @@ sub output {
 
 		#' > : encoding( UTF- 8 ) ' seems to work without it
 		open( my $fh, '> ', $destination )
-		  or die 'Error: Cannot write to file:' . $destination . $!;
+		  or die 'Error: Cannot write to file:' . $destination . '! ' . $!;
 		print $fh $string;
 		close $fh;
 	} else {
@@ -276,6 +291,24 @@ sub unwrap {
 	return $dom;
 }
 
+sub validate {
+	my $dom = shift;
+
+	if ( $config->{validate} ne 'false' ) {
+		verbose "Validating result against $config->{validate}";
+		my $xmlschema =
+		  XML::LibXML::Schema->new( location => $config->{validate} )
+		  or die "Cannot validate";
+		eval { $xmlschema->validate($dom); };
+
+		if ($@) {
+			warn "validation failed: $@" if $@;
+		} else {
+			verbose "validation succeeds\n";
+		}
+	}
+}
+
 =head2 verbose "message";
 
 Print message to STDOUT if script is run with -v options.
@@ -290,8 +323,6 @@ sub verbose {
 		}
 	}
 }
-
-
 
 =head2 help
 
