@@ -2,3 +2,27 @@ This is a very simple OAI harverster written in perl, based on Tim Brody's
 great HTTP::OAI. It comes with a few other small and simple perl scripts
 which I use to deal with my oai/xml workflow.
 
+HARVESTER
+
+Parameters go into a conf file which is written in yaml format.
+
+I think it is likely that you will want to do the same harvesting processes
+several times. So i think it is good to store that data in one conf file so you
+execute that again.
+
+In the following examples I assume you want to write output to files in a xml
+directory. Make sure that you create it!
+
+#conf/m61117mpx.yml
+baseURL: 'http://spk.mimo-project.eu:8080/oai'
+verb: 'GetRecord'
+metadataPrefix: 'lido'
+identifier: 'spk-berlin.de:EM-objId-61117'
+output: 'xml/61117.lido.xml'
+unwrap: 'true'
+
+#in shell
+>bin/harvester.pl -d conf/m1234.yml
+
+
+

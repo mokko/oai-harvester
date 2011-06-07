@@ -3,6 +3,7 @@
 *.mpx
 xml-unwrapped/*
 xml-oai/*
+xml/*
 conf/*
 bak/*
 tron/*

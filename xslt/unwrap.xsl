@@ -4,8 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
 
-	<xsl:output method="xml" version="1.0" encoding="UTF-8"
-		indent="yes" />
+	<xsl:output method="xml" version="1.0" encoding="UTF-8" indent="yes" />
 	<xsl:strip-space elements="*" />
 
 	<!-- metadata is double in my harvester. This is the quickest and dirtiest fix -->

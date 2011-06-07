@@ -71,6 +71,14 @@ if ($@) {
 # SUBS
 #
 
+=head2 my $catalog=load_catalog ($file_location);
+
+load pseudo catalog file. A yaml file which contains info about known
+uris for namespaces.
+
+=cut
+
+
 sub load_catalog {
 	my $file = shift;
 	my $catalog_fn =
@@ -86,8 +94,16 @@ sub load_catalog {
 	if ($catalog) {
 		return $catalog;
 	}
-	die "Some error loading catalog configuration!";
+	die "Error: Loading catalog information!";
 }
+
+=head2 my $location=$self->lookup ();
+
+Returns location uri for namespace mentioned in $ARGV[1] from the pseudo
+catalog.
+
+=cut
+
 
 sub lookup {
 	my $input = shift;    #prefix or location
@@ -109,6 +125,12 @@ sub lookup {
 	}
 
 }
+
+=head2 verbose "msg";
+
+the usual
+
+=cut
 
 sub verbose {
 	my $msg = shift;
