@@ -90,16 +90,11 @@ The following subs are just documented out of habit.
 
 =cut
 
-#
-# Command line and config sanity
-#
-
+#command line
 our $config = configSanity( $ARGV[0] );
+
+#config file
 my $params = paramsSanity($config);
-
-#path relative to bindir/ change path if necessary
-
-#testing if this solves metadata/metadata problem
 
 #
 # MAIN
@@ -119,6 +114,11 @@ my $harvester;
 }
 
 my $response = $harvester->$verb( %{$params} );
+
+if ( $response->is_error ) {
+	print $response->code . " " . $response->message, "\n";
+	exit 1;
+}
 
 #
 # OUTPUT
@@ -226,7 +226,9 @@ sub output {
 	}
 
 	if ( $config->{output} ) {
-		verbose "Write to file ($destination)";
+		print 'Write '
+		  . length($string)
+		  . " chars to file ($destination)\n";
 
 		#' > : encoding( UTF- 8 ) ' seems to work without it
 		open( my $fh, '> ', $destination )
@@ -304,7 +306,7 @@ sub validate {
 		if ($@) {
 			warn "validation failed: $@" if $@;
 		} else {
-			verbose "validation succeeds\n";
+			print "Validation succeeds\n";
 		}
 	}
 }

@@ -20,9 +20,10 @@ metadataPrefix: 'lido'
 identifier: 'spk-berlin.de:EM-objId-61117'
 output: 'xml/61117.lido.xml'
 unwrap: 'true'
+validate: 'http://www.lido-schema.org/schema/v1.0/lido-v1.0.xsd'
 
 #in shell
->bin/harvester.pl -d conf/m1234.yml
+>bin/harvester.pl conf/m1234.yml
 
 
 
