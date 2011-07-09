@@ -1,4 +1,5 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+# ABSTRACT: Simple OAI harvester for the commandline
 
 use strict;
 use warnings;
@@ -13,26 +14,21 @@ use HTTP::OAI::Headers;
 use XML::LibXML;
 use XML::LibXSLT;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
+use Pod::Usage;
 
 getopts( 'o:huv', our $opts = {} );
 
-help() if ( $opts->{h} );
+pod2usage() if ( $opts->{h} );
 
 sub verbose;
 
-=head1 NAME
-
-harvest - Simple OAI harvester for the commandline
-
 =head1 SYNOPSIS
 
-harvest [-v] conf.yml
+harvest.pl [-v] conf.yml
 
-Read the configuration specified in command line and act accordingly.
+Read the configuration specified in command line and harvest accordingly.
 
-=head1 VERSION
-
-0.01
+See 'perldoc harvest.pl' for full documentation.
 
 =head1 CONFIGURATION FILE
 
@@ -103,21 +99,34 @@ my $params = paramsSanity($config);
 my $verb = $params->{verb};
 delete $params->{verb};
 
-my $harvester;
-{
-	my %args = ( 'baseURL' => $config->{baseURL}, );
+#args for harvester
+my %args = ( 'baseURL' => $config->{baseURL}, );
 
-	$config->{resume} eq 'true'
-	  ? $args{resume} = 1
-	  : $args{resume} = 0;
-	$harvester = HTTP::OAI::Harvester->new(%args);
-}
+$config->{resume} eq 'true'
+  ? $args{resume} = 1
+  : $args{resume} = 0;
+my $harvester = HTTP::OAI::Harvester->new(%args);
 
+#fix for HTTP::OAI::Harvester 3.25
+#resume works only when onRecord is specified
+
+#act on verb
 my $response = $harvester->$verb( %{$params} );
 
 if ( $response->is_error ) {
 	print $response->code . " " . $response->message, "\n";
 	exit 1;
+}
+
+#WORKAROUND TO MAKE RESUME WORK
+if ( $response->resumptionToken && $config->{resume} eq 'true' ) {
+	while ( my $rt = $response->resumptionToken ) {
+		verbose 'auto resume ' . $rt->resumptionToken;
+		$response->resume( resumptionToken => $rt );
+		if ( $response->is_error ) {
+			die( "Error resuming: " . $response->message . "\n" );
+		}
+	}
 }
 
 #
@@ -126,9 +135,11 @@ if ( $response->is_error ) {
 
 my $dom = unwrap($response);
 
-validate($dom);
-
 output( $dom->toString );
+
+#difficult not to let validator kill this script if it fails,
+#so put him at the end
+validate($dom);
 
 #
 # SUBS
@@ -138,12 +149,12 @@ sub configSanity {
 	my $configFn = shift;
 
 	if ( !$configFn ) {
-		print "Error: Specify config file!";
+		print "Error: Specify config file!\n";
 		exit 1;
 	}
 
 	if ( !-f $configFn ) {
-		print "Error: Specified file does not exist!";
+		print "Error: Specified file does not exist!\n";
 		exit 1;
 	}
 
@@ -226,9 +237,7 @@ sub output {
 	}
 
 	if ( $config->{output} ) {
-		print 'Write '
-		  . length($string)
-		  . " chars to file ($destination)\n";
+		print 'Write ' . length($string) . " chars to file ($destination)\n";
 
 		#' > : encoding( UTF- 8 ) ' seems to work without it
 		open( my $fh, '> ', $destination )
@@ -298,9 +307,12 @@ sub validate {
 
 	if ( $config->{validate} ne 'false' ) {
 		verbose "Validating result against $config->{validate}";
+
+		#don't let him die if validation fails!
 		my $xmlschema =
 		  XML::LibXML::Schema->new( location => $config->{validate} )
-		  or die "Cannot validate";
+		  or die "Cannot init validation";
+
 		eval { $xmlschema->validate($dom); };
 
 		if ($@) {
@@ -324,15 +336,6 @@ sub verbose {
 			print $msg. "\n";
 		}
 	}
-}
-
-=head2 help
-
-=cut
-
-sub help {
-	system "perldoc $0";
-	exit;
 }
 
 =head1 KNOWN ISSUES
