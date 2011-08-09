@@ -119,12 +119,15 @@ if ( $response->is_error ) {
 }
 
 #WORKAROUND TO MAKE RESUME WORK
-if ( $response->resumptionToken && $config->{resume} eq 'true' ) {
-	while ( my $rt = $response->resumptionToken ) {
-		verbose 'auto resume ' . $rt->resumptionToken;
-		$response->resume( resumptionToken => $rt );
-		if ( $response->is_error ) {
-			die( "Error resuming: " . $response->message . "\n" );
+#resume only if ListIdentifiers and ListRecords
+if ( $verb =~ /ListRecords|ListIdentifiers/ ) {
+	if ( $response->resumptionToken && $config->{resume} eq 'true' ) {
+		while ( my $rt = $response->resumptionToken ) {
+			verbose 'auto resume ' . $rt->resumptionToken;
+			$response->resume( resumptionToken => $rt );
+			if ( $response->is_error ) {
+				die( "Error resuming: " . $response->message . "\n" );
+			}
 		}
 	}
 }
@@ -132,8 +135,7 @@ if ( $response->resumptionToken && $config->{resume} eq 'true' ) {
 #
 # OUTPUT
 #
-
-my $dom = unwrap($response);
+my $dom = unwrap( $response->toDOM );
 
 output( $dom->toString );
 
@@ -285,8 +287,9 @@ Expects a HTTP::OAI response objects and returns a dom object.
 =cut
 
 sub unwrap {
-	my $response = shift;
-	my $dom      = $response->toDOM;
+
+	#my $response = shift;
+	my $dom = shift;
 	if ( $config->{unwrapFN} ) {
 
 		my $xslt      = XML::LibXSLT->new();
