@@ -6,21 +6,21 @@ use warnings;
 
 use Cwd 'realpath';
 use File::Spec;
-use FindBin;
 use Getopt::Std;
-use HTTP::OAI;
+
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+
+use HTTP::OAI::MyHarvester;
 use HTTP::OAI::Repository qw/validate_request/;
-use HTTP::OAI::Headers;
-use XML::LibXML;
-use XML::LibXSLT;
+#use HTTP::OAI::Headers;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 use Pod::Usage;
-
+use Debug::Simpler 'debug','debug_on';
+debug_on(); 
 getopts( 'o:huv', our $opts = {} );
-
 pod2usage() if ( $opts->{h} );
 
-sub verbose;
 
 =head1 SYNOPSIS
 
@@ -105,7 +105,7 @@ my %args = ( 'baseURL' => $config->{baseURL}, );
 $config->{resume} eq 'true'
   ? $args{resume} = 1
   : $args{resume} = 0;
-my $harvester = HTTP::OAI::Harvester->new(%args);
+my $harvester = new HTTP::OAI::MyHarvester (%args);
 
 #fix for HTTP::OAI::Harvester 3.25
 #resume works only when onRecord is specified
@@ -123,7 +123,7 @@ if ( $response->is_error ) {
 if ( $verb =~ /ListRecords|ListIdentifiers/ ) {
 	if ( $response->resumptionToken && $config->{resume} eq 'true' ) {
 		while ( my $rt = $response->resumptionToken ) {
-			verbose 'auto resume ' . $rt->resumptionToken;
+			debug 'auto resume ' . $rt->resumptionToken;
 			$response->resume( resumptionToken => $rt );
 			if ( $response->is_error ) {
 				die( "Error resuming: " . $response->message . "\n" );
@@ -135,13 +135,13 @@ if ( $verb =~ /ListRecords|ListIdentifiers/ ) {
 #
 # OUTPUT
 #
-my $dom = unwrap( $response->toDOM );
+my $dom = $harvester->unwrap( $response->toDOM );
 
-output( $dom->toString );
+output( $dom->toString(1) );
 
 #difficult not to let validator kill this script if it fails,
 #so put him at the end
-validate($dom);
+#$harvester->validate($dom);
 
 #
 # SUBS
@@ -160,7 +160,7 @@ sub configSanity {
 		exit 1;
 	}
 
-	verbose "About to load config file ($configFn)";
+	debug "About to load config file ($configFn)";
 
 	my $config = LoadFile($configFn) or die "Cannot load config file";
 
@@ -171,48 +171,39 @@ sub configSanity {
 
 	#ensure that there is the output key
 	if ( $config->{output} ) {
-		verbose "Output: " . $config->{output};
+		debug "Output: " . $config->{output};
 	} else {
 
 		#init output even if empty to avoid uninitialized warning
 		$config->{output} = '';
-		verbose "Output: STDOUT";
+		debug "Output: STDOUT";
 	}
 
 	#delete old file if any
 	#if (-f $config->{output}) {
-	#	verbose "delete old file";
+	#	debug "delete old file";
 	#	unlink $config->{output}
 	#}
 
 	if ( $config->{unwrap} ) {
 		if ( $config->{unwrap} eq 'true' ) {
-			$config->{unwrapFN} = realpath(
-				File::Spec->catfile(
-					$FindBin::Bin, '..', 'xslt', 'unwrap.xsl'
-				)
-			);
-			if ( !-f $config->{unwrapFN} ) {
-				print "Error: $config->{unwrapFN} not found";
-				exit 1;
-			}
-			verbose "Unwrap (conf file): $config->{unwrap}";
+			debug "Unwrap (conf file): $config->{unwrap}";
 		}
 
 	} else {
-		verbose "Unwrap (conf file): not defined -> false";
+		debug "Unwrap (conf file): not defined -> false";
 		$config->{unwrap} = 'false';
 	}
 
 	if ( !$config->{resume} ) {
 		$config->{resume} = 'false';
 	}
-	verbose "Resume (conf file): $config->{resume}";
+	debug "Resume (conf file): $config->{resume}";
 
 	if ( !$config->{validate} ) {
 		$config->{validate} = 'false';
 	}
-	verbose "Validate (conf file): $config->{validate}";
+	debug "Validate (conf file): $config->{validate}";
 
 	return $config;
 }
@@ -230,7 +221,7 @@ sub output {
 	my $destination = $config->{output};
 	if ($file) {
 
-		#verbose "called with file: $file";
+		#debug "called with file: $file";
 		$destination = File::Spec->catfile( $config->{output}, $file );
 	}
 
@@ -247,7 +238,7 @@ sub output {
 		print $fh $string;
 		close $fh;
 	} else {
-		verbose "Write STDOUT";
+		debug "Write STDOUT";
 		print $string;
 	}
 }
@@ -258,13 +249,13 @@ sub paramsSanity {
 	my $params = {};
 	my @import = qw/identifier metadataPrefix verb from to set/;
 
-	verbose "Params from config file:";
+	debug "Params from config file:";
 	foreach (@import) {
 		if ( $conf->{$_} ) {
 			$params->{$_} = $conf->{$_};
 
 			#delete $conf->{$_};
-			verbose "  $_:" . $params->{$_};
+			debug "  $_:" . $params->{$_};
 		}
 	}
 
@@ -276,70 +267,12 @@ sub paramsSanity {
 		}
 		exit 1;
 	}
-	verbose "Request validates";
+	debug "Request validates";
 	return $params;
 }
 
-=head2 $dom=unwrap ($response);
 
-Expects a HTTP::OAI response objects and returns a dom object.
 
-=cut
-
-sub unwrap {
-
-	#my $response = shift;
-	my $dom = shift;
-	if ( $config->{unwrapFN} ) {
-
-		my $xslt      = XML::LibXSLT->new();
-		my $style_doc = XML::LibXML->load_xml(
-			location => $config->{unwrapFN},
-			no_cdata => 1
-		);
-		my $stylesheet = $xslt->parse_stylesheet($style_doc);
-		$dom = $stylesheet->transform($dom);
-		verbose "unwrapping...";
-	}
-
-	return $dom;
-}
-
-sub validate {
-	my $dom = shift;
-
-	if ( $config->{validate} ne 'false' ) {
-		verbose "Validating result against $config->{validate}";
-
-		#don't let him die if validation fails!
-		my $xmlschema =
-		  XML::LibXML::Schema->new( location => $config->{validate} )
-		  or die "Cannot init validation";
-
-		eval { $xmlschema->validate($dom); };
-
-		if ($@) {
-			warn "validation failed: $@" if $@;
-		} else {
-			print "Validation succeeds\n";
-		}
-	}
-}
-
-=head2 verbose "message";
-
-Print message to STDOUT if script is run with -v options.
-
-=cut
-
-sub verbose {
-	my $msg = shift;
-	if ($msg) {
-		if ( $opts->{v} ) {
-			print $msg. "\n";
-		}
-	}
-}
 
 =head1 KNOWN ISSUES
 
