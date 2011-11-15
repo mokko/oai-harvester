@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 # ABSTRACT: Simple OAI harvester for the commandline
+# PODNAME: harvest.pl
 
 use strict;
 use warnings;
@@ -295,13 +296,5 @@ HTTP::OAI::Repository
 
 HTTP::OAI::DataProvider (GitHub), Salsa_OAI (GitHub)
 
-=back
-
-=head1 COPYRIGHT / LICENSE
-
-This little scrip is written by Maurice Mengel and should be available on
-github.com/mokko/oai-harvester. It is based on Tim Brody's HTTP::OAI.
-This script comes with absolutely no warranty and is under the same license
-as Larry Wall's Perl 5.12.2. Written in 2011.
 
 =cut

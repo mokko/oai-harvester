@@ -3,7 +3,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 2;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use HTTP::OAI::MyHarvester;
@@ -15,10 +15,4 @@ ok( ref $harvester eq 'HTTP::OAI::MyHarvester',
 my $response = $harvester->Identify();
 ok( ref $response eq 'HTTP::OAI::Identify', 'new succeeds' );
 
-$harvester = new HTTP::OAI::MyHarvester(
-	baseURL => 'test',
-	unwrap  => '/home/maurice/projects/Harvester/xslt/unwrap.xsl'
-);
-ok( ref $harvester eq 'HTTP::OAI::MyHarvester',
-	'new with unwrap' . ref $harvester );
 

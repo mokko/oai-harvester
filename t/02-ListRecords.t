@@ -15,7 +15,6 @@ debug_on();
 	my $harvester = new HTTP::OAI::MyHarvester(
 		baseURL => 'http://spk.mimo-project.eu:8080/oai',
 		resume  => 0,
-		unwrap => '/home/maurice/projects/Harvester/xslt/unwrap.xsl',
 	);
 	my $response =
 	  $harvester->ListRecords( set => '78', metadataPrefix => 'oai_dc' );
@@ -29,13 +28,8 @@ debug_on();
 	}
 
 	my $dom=$response->toDOM;
-	ok (ref $dom eq 'XML::LibXML::Document', 'XML::LibXML::Document'); 
-	my $newdom=$harvester->unwrap ($response);
-	ok (ref $newdom eq 'XML::LibXML::Document', 'XML::LibXML::Document'); 
-	
-	#debug $newdom->toString;
-	$harvester->ListIdentifiers;
-	exit;
+	ok (ref $dom eq 'XML::LibXML::Document', 'XML::LibXML::Document '. ref  $dom ); 
+
 }
 
 {
@@ -48,7 +42,7 @@ debug_on();
 
 	if ( $response && !$response->is_error ) {
 		ok( ref $response eq 'HTTP::OAI::ListRecords',
-			'ListRecords' . ref $response );
+			'resume');
 	}
 
 	

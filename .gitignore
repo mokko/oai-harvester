@@ -9,4 +9,7 @@ bak/*
 tron/*
 xslt/tron/*
 *.exe
-*.zip
+*.zip.project
+perl.exe.stackdump
+HTTP-OAI-MyHarvester-*
+.project
