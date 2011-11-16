@@ -14,14 +14,13 @@ use lib "$FindBin::Bin/../lib";
 
 use HTTP::OAI::MyHarvester;
 use HTTP::OAI::Repository qw/validate_request/;
+
 #use HTTP::OAI::Headers;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 use Pod::Usage;
-use Debug::Simpler 'debug','debug_on';
-debug_on(); 
+use Debug::Simpler 'debug', 'debug_on';
 getopts( 'o:huv', our $opts = {} );
 pod2usage() if ( $opts->{h} );
-
 
 =head1 SYNOPSIS
 
@@ -106,7 +105,7 @@ my %args = ( 'baseURL' => $config->{baseURL}, );
 $config->{resume} eq 'true'
   ? $args{resume} = 1
   : $args{resume} = 0;
-my $harvester = new HTTP::OAI::MyHarvester (%args);
+my $harvester = new HTTP::OAI::MyHarvester(%args) or die "No harvester";
 
 #fix for HTTP::OAI::Harvester 3.25
 #resume works only when onRecord is specified
@@ -122,7 +121,12 @@ if ( $response->is_error ) {
 #
 # OUTPUT
 #
-my $dom = $harvester->unwrap( $response );
+my $dom;
+if ($config->{unwrap} eq 'true') {
+	$dom = $harvester->unwrap($response);
+} else {
+	$dom = $response->toDOM;
+}
 
 output( $dom->toString(1) );
 
@@ -149,6 +153,11 @@ sub configSanity {
 
 	debug "About to load config file ($configFn)";
 
+	if ( $opts->{v} ) {
+		debug_on();
+		debug "Verbose mode on";
+	}
+
 	my $config = LoadFile($configFn) or die "Cannot load config file";
 
 	#command line overwrites config file
@@ -159,7 +168,8 @@ sub configSanity {
 	#ensure that there is the output key
 	if ( $config->{output} ) {
 		debug "Output: " . $config->{output};
-	} else {
+	}
+	else {
 
 		#init output even if empty to avoid uninitialized warning
 		$config->{output} = '';
@@ -177,7 +187,8 @@ sub configSanity {
 			debug "Unwrap (conf file): $config->{unwrap}";
 		}
 
-	} else {
+	}
+	else {
 		debug "Unwrap (conf file): not defined -> false";
 		$config->{unwrap} = 'false';
 	}
@@ -224,7 +235,8 @@ sub output {
 		  or die 'Error: Cannot write to file:' . $destination . '! ' . $!;
 		print $fh $string;
 		close $fh;
-	} else {
+	}
+	else {
 		debug "Write STDOUT";
 		print $string;
 	}
@@ -257,9 +269,6 @@ sub paramsSanity {
 	debug "Request validates";
 	return $params;
 }
-
-
-
 
 =head1 KNOWN ISSUES
 
