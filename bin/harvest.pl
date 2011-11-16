@@ -280,11 +280,11 @@ not work on all metadata formats, such as oai_dc.
 
 =head1 SEE ALSO
 
-=over
+=over 3
 
 =item
 
-OAI Specification at L<http://www.openarchives.org/OAI/openarchivesprotocol.html>
+OAI Specification L<http://www.openarchives.org/OAI/openarchivesprotocol.html>
 
 =item
 
