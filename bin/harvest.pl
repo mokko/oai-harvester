@@ -119,24 +119,10 @@ if ( $response->is_error ) {
 	exit 1;
 }
 
-#WORKAROUND TO MAKE RESUME WORK
-#resume only if ListIdentifiers and ListRecords
-if ( $verb =~ /ListRecords|ListIdentifiers/ ) {
-	if ( $response->resumptionToken && $config->{resume} eq 'true' ) {
-		while ( my $rt = $response->resumptionToken ) {
-			debug 'auto resume ' . $rt->resumptionToken;
-			$response->resume( resumptionToken => $rt );
-			if ( $response->is_error ) {
-				die( "Error resuming: " . $response->message . "\n" );
-			}
-		}
-	}
-}
-
 #
 # OUTPUT
 #
-my $dom = $harvester->unwrap( $response->toDOM );
+my $dom = $harvester->unwrap( $response );
 
 output( $dom->toString(1) );
 
