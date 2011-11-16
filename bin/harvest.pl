@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!perl
 # ABSTRACT: Simple OAI harvester for the commandline
 # PODNAME: harvest.pl
 
@@ -18,7 +18,8 @@ use HTTP::OAI::Repository qw/validate_request/;
 #use HTTP::OAI::Headers;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 use Pod::Usage;
-use Debug::Simpler 'debug', 'debug_on';
+use Debug::Simpler 'debug';
+Debug::Simpler::debug_off();
 getopts( 'o:huv', our $opts = {} );
 pod2usage() if ( $opts->{h} );
 
@@ -154,8 +155,10 @@ sub configSanity {
 	debug "About to load config file ($configFn)";
 
 	if ( $opts->{v} ) {
-		debug_on();
+		Debug::Simpler::debug_on();
 		debug "Verbose mode on";
+	} else {
+		Debug::Simpler::debug_off();
 	}
 
 	my $config = LoadFile($configFn) or die "Cannot load config file";
