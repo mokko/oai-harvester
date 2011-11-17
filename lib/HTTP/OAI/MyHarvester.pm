@@ -14,6 +14,8 @@ use File::Basename qw(dirname);
 use File::Spec;
 use Cwd qw(abs_path);
 
+our $progress;
+
 debug_on();
 
 =head2 SYNOPSIS
@@ -26,6 +28,7 @@ debug_on();
 
 	my $dom=$harvester->unwrap($response);
 
+	new option: progress=>sub{print '.'}
 
 =head1 DESCRIPTION
 
@@ -59,6 +62,12 @@ sub ListIdentifiers {
 	return $self->_resume($response);
 }
 
+sub register_progress {
+	my $self = shift;
+	$progress = shift or return;
+	debug "Register progress";
+}
+
 sub _resume {
 	my $self     = shift or die "somethings really wrong";
 	my $response = shift or die "somethings really wrong";
@@ -70,8 +79,10 @@ sub _resume {
 
 	if ( $response->resumptionToken && $self->{resume} eq 1 ) {
 		while ( my $rt = $response->resumptionToken ) {
+			if ($progress) {
+				&$progress();
+			}
 
-			#debug 'auto resume ' . $rt->resumptionToken;
 			$response->resume( resumptionToken => $rt );
 			if ( $response->is_error ) {
 				die( "Error resuming: " . $response->message . "\n" );
@@ -81,51 +92,58 @@ sub _resume {
 	return $response;
 }
 
-sub unwrap {
-	my $self     = shift or die "Something's wrong!";
-	my $response = shift or return 0;
+sub _getDom {
+	my $input = shift or return;
 
-	if ( ref $response !~ /^HTTP::OAI::/ ) {
-		carp "Response is not the right object:" . ref $response;
+	if (   ref $input eq 'HTTP::OAI::ListRecords'
+		or ref $input eq 'HTTP::OAI::ListIdentifiers' )
+	{
+		return $input->toDOM;
 	}
-	my $this     = abs_path __FILE__;
+	else {
+		return $input;
+	}
+}
+
+sub _findFile {
+	my $this = abs_path __FILE__;
 	$this =~ s/\.pm$//;
-	my $xsl_fn = File::Spec->catfile( $this, 'unwrap.xsl' );
+	return File::Spec->catfile( $this, 'unwrap.xsl' );
 
 	#debug "unwrapping... $xsl_fn";
 	#if (-f $xsl_fn) {
 	#	debug "xsl_fn exists";
 	#}
+}
+
+=head2 my $dom_unwrapped=$harvester->unwrap ($dom_wrapped);
+
+Expects a XML::LibXML::Document, HTTP::OAI::ListRecords or 
+HTTP::OAI::ListIdentifiers object. Returns the unwrapped version as a 
+XML::LibXML::Document or empty on failure. 
+
+Unwrapping is a mechanism of extracting the metadata from the OAI response that
+does not work with all metadata formats. It fails with oai_dc for example.
+
+=cut
+
+sub unwrap {
+	my $self = shift          or die "Something's wrong!";
+	my $dom  = _getDom(shift) or return;
+
+	if ( ref $dom !~ /^XML::LibXML::Document/ ) {
+		carp "Input is not the right object:" . ref $dom;
+	}
+	my $xsl_fn = _findFile() or return;
+
 	my $style_doc = XML::LibXML->load_xml(
 		location => $xsl_fn,
 		no_cdata => 1
 	);
-	my $xslt=XML::LibXSLT->new();
+	my $xslt       = XML::LibXSLT->new();
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
-	return $stylesheet->transform($response->toDOM);
-}
 
-=head2 todo
-
-sub validate {
-	my $dom = shift;
-
-	#if ( $config->{validate} ne 'false' ) {
-		debug "Validating result against $config->{validate}";
-
-		#don't let him die if validation fails!
-		#my $xmlschema =
-		#  XML::LibXML::Schema->new( location => $config->{validate} )
-		#  or die "Cannot init validation";
-
-		#eval { $xmlschema->validate($dom); };
-
-		if ($@) {
-			warn "validation failed: $@" if $@;
-		} else {
-			print "Validation succeeds\n";
-		}
-	#}
+	return $stylesheet->transform($dom);
 }
 
 =cut

@@ -19,7 +19,8 @@ use HTTP::OAI::Repository qw/validate_request/;
 use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
 use Pod::Usage;
 use Debug::Simpler 'debug';
-Debug::Simpler::debug_off();
+
+#Debug::Simpler::debug_off();
 getopts( 'o:huv', our $opts = {} );
 pod2usage() if ( $opts->{h} );
 
@@ -88,7 +89,7 @@ The following subs are just documented out of habit.
 =cut
 
 #command line
-our $config = configSanity( $ARGV[0] );
+my $config = configSanity( $ARGV[0] );
 
 #config file
 my $params = paramsSanity($config);
@@ -103,13 +104,16 @@ delete $params->{verb};
 #args for harvester
 my %args = ( 'baseURL' => $config->{baseURL}, );
 
-$config->{resume} eq 'true'
-  ? $args{resume} = 1
-  : $args{resume} = 0;
-my $harvester = new HTTP::OAI::MyHarvester(%args) or die "No harvester";
+if ( $config->{resume} eq 'true' ) {
+	$args{resume} = 1;
+}
+else {
+	$args{resume} = 0;
+}
 
-#fix for HTTP::OAI::Harvester 3.25
-#resume works only when onRecord is specified
+#debug "args resume" . $args{resume} . $config->{resume};
+my $harvester = new HTTP::OAI::MyHarvester(%args) or die "No harvester";
+$harvester->register_progress( sub { $|++; print '.'; } );
 
 #act on verb
 my $response = $harvester->$verb( %{$params} );
@@ -123,13 +127,19 @@ if ( $response->is_error ) {
 # OUTPUT
 #
 my $dom;
-if ($config->{unwrap} eq 'true') {
+if ( $config->{unwrap} eq 'true' ) {
 	$dom = $harvester->unwrap($response);
-} else {
+}
+else {
 	$dom = $response->toDOM;
 }
 
-output( $dom->toString(1) );
+if ($dom) {
+	output( $dom->toString(1) );
+}
+else {
+	debug "no dom!";
+}
 
 #difficult not to let validator kill this script if it fails,
 #so put him at the end
@@ -157,7 +167,8 @@ sub configSanity {
 	if ( $opts->{v} ) {
 		Debug::Simpler::debug_on();
 		debug "Verbose mode on";
-	} else {
+	}
+	else {
 		Debug::Simpler::debug_off();
 	}
 

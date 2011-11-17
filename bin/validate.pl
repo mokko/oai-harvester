@@ -13,7 +13,7 @@ sub verbose;
 
 #use Data::Dumper qw/Dumper/;
 
-our $catalog = load_catalog('validate.yml');
+our $catalog = load_catalog('.validate.yml');
 
 =head1 NAME
 
@@ -82,7 +82,7 @@ uris for namespaces.
 sub load_catalog {
 	my $file = shift;
 	my $catalog_fn =
-	  realpath( File::Spec->catfile( $FindBin::Bin, '..', 'conf', $file ) );
+	  realpath( File::Spec->catfile( $ENV{HOME}, $file ) );
 
 	verbose "Trying to load $catalog_fn";
 	if ( !-f $catalog_fn ) {

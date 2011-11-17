@@ -41,8 +41,8 @@ if ( !$ARGV[1] ) {
 
 my $source = XML::LibXML->load_xml( location => $ARGV[0] );
 my $harvester = new HTTP::OAI::MyHarvester(baseURL=>'test');
-my $result=$harvester->unwrap ($source);
-output ($result);
+my $dom=$harvester->unwrap ($source);
+output ($dom);
 exit;
 
 
