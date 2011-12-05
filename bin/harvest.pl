@@ -92,7 +92,7 @@ The following subs are just documented out of habit.
 
 #command line & config file
 my $config = configSanity( $ARGV[0] );
-my ($verb, $params)= paramsSanity($config);
+my ( $verb, $params ) = paramsSanity($config);
 
 #
 # MAIN
@@ -112,8 +112,7 @@ else {
 my $harvester = new HTTP::OAI::Harvester::Plus(%args) or die "No harvester";
 $harvester->register( progress => sub { $|++; print '.'; } );
 
-if ( $config->{limit}) {
-	debug "registering limit " . $config->{limit};
+if ( $config->{limit} ) {
 	$harvester->register( limit => $config->{limit} );
 }
 

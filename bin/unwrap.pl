@@ -32,7 +32,7 @@ if ( !-f $ARGV[0] ) {
 }
 
 if ( !$ARGV[1] ) {
-	debug "You didnot specify output, so will be using STDOUT!";
+	debug "You didnot specify output; will use STDOUT!";
 }
 
 #
@@ -42,15 +42,21 @@ if ( !$ARGV[1] ) {
 my $source = XML::LibXML->load_xml( location => $ARGV[0] );
 my $harvester = new HTTP::OAI::Harvester::Plus(baseURL=>'test');
 my $dom=$harvester->unwrap ($source);
-output ($dom);
-exit;
+outputDOM ($dom);
+exit 1;
 
 
 #
 # SUBS
 #
 
-sub output {
+=func outputDOM ($dom);
+
+outputs DOM either to file (if ARGV[1] defined) or to STDOUT/
+
+=cut
+
+sub outputDOM {
 	my $result=shift or return;
 	if ($ARGV[1]) {
 		$result->toFile ($ARGV[1], '1') or die "Cannot write $ARGV[1]";

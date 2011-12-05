@@ -33,10 +33,11 @@ debug_on();
 }
 
 {
-	my $harvester = new HTTP::OAI::MyHarvester(
+	my $harvester = new HTTP::OAI::Harvester::Plus(
 		baseURL => 'http://spk.mimo-project.eu:8080/oai',
 		resume  => 1
 	);
+	$harvester->register (limit=>1);
 	my $response =
 	  $harvester->ListRecords( set => '78', metadataPrefix => 'oai_dc' );
 

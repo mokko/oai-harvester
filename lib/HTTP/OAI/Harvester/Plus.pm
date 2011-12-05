@@ -14,7 +14,7 @@ use File::Basename qw(dirname);
 use File::Spec;
 use Cwd qw(abs_path);
 
-our %options; #for progress and limit
+our %options;    #for progress and limit
 
 debug_on();
 
@@ -48,6 +48,7 @@ sub ListRecords {
 	my $self   = shift or die "somethings really wrong";
 	my %params = @_    or die "somethings really wrong";
 
+	_showProgress();
 	my $response = $self->HTTP::OAI::Harvester::ListRecords(%params);
 
 	return $self->_resume($response);
@@ -57,6 +58,7 @@ sub ListIdentifiers {
 	my $self   = shift or die "somethings really wrong";
 	my %params = @_    or die "somethings really wrong";
 
+	_showProgress();
 	my $response = $self->HTTP::OAI::Harvester::ListIdentifiers(%params);
 
 	return $self->_resume($response);
@@ -78,7 +80,7 @@ sub register {
 
 	if ( $opts{progress} ) {
 		debug "Register progress";
-		if (ref $opts{progress} ne 'CODE' ) {
+		if ( ref $opts{progress} ne 'CODE' ) {
 			carp "Cannot register progress";
 		}
 		$options{progress} = $opts{progress};
@@ -104,22 +106,27 @@ sub _resume {
 	}
 
 	if ( $response->resumptionToken && $self->{resume} eq 1 ) {
-		my $count = 0;
-		if ( !$options{limit} or $options{limit} < $count ) {
-			while ( my $rt = $response->resumptionToken ) {
-				$count++;
-				if ( $options{progress} ) {
-					&{ $options{progress}() };
-				}
+		my $count = 1;
+		while ( my $rt = $response->resumptionToken
+			and ( $count < $options{limit} or !$options{limit} ) )
+		{
+			$count++;
+			_showProgress();
+			#debug "limit VS count: $options{limit} < $count ";
 
-				$response->resume( resumptionToken => $rt );
-				if ( $response->is_error ) {
-					die( "Error resuming: " . $response->message . "\n" );
-				}
+			$response->resume( resumptionToken => $rt );
+			if ( $response->is_error ) {
+				die( "Error resuming: " . $response->message . "\n" );
 			}
 		}
 	}
 	return $response;
+}
+
+sub _showProgress {
+	if ( $options{progress} ) {
+		$options{progress}();
+	}
 }
 
 sub _getDom {
