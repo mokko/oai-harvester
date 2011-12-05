@@ -12,7 +12,7 @@ use Getopt::Std;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 
-use HTTP::OAI::MyHarvester;
+use HTTP::OAI::Harvester::Plus;
 use HTTP::OAI::Repository qw/validate_request/;
 
 #use HTTP::OAI::Headers;
@@ -54,12 +54,14 @@ according to OAI Specification Version 2 (see below).
 		oai datestamp
 	verb (required):
 		OAI verb
-	resume:
-		true or false
-
 
 	OTHER STUFF
-
+	resume:
+		true or false
+	resumptionToken:
+		resumptionToken as string 
+	limit: 5
+	    number of times ListRecord and ListIdentifiers should resume.
 	unwrap:
 		true or false
 	validate:
@@ -88,18 +90,13 @@ The following subs are just documented out of habit.
 
 =cut
 
-#command line
+#command line & config file
 my $config = configSanity( $ARGV[0] );
-
-#config file
-my $params = paramsSanity($config);
+my ($verb, $params)= paramsSanity($config);
 
 #
 # MAIN
 #
-
-my $verb = $params->{verb};
-delete $params->{verb};
 
 #args for harvester
 my %args = ( 'baseURL' => $config->{baseURL}, );
@@ -112,11 +109,26 @@ else {
 }
 
 #debug "args resume" . $args{resume} . $config->{resume};
-my $harvester = new HTTP::OAI::MyHarvester(%args) or die "No harvester";
-$harvester->register_progress( sub { $|++; print '.'; } );
+my $harvester = new HTTP::OAI::Harvester::Plus(%args) or die "No harvester";
+$harvester->register( progress => sub { $|++; print '.'; } );
 
+if ( $config->{limit}) {
+	debug "registering limit " . $config->{limit};
+	$harvester->register( limit => $config->{limit} );
+}
+
+#my $response;
+#if ( $config->{resumptionToken} ) {
+#resumptionToken is officially no verb, todo: test
+#	$response =
+#	  $harvester->resumptionToken( resumptionToken =
+#		  $config->{resumptionToken} );
+#}
+#else {
 #act on verb
 my $response = $harvester->$verb( %{$params} );
+
+#}
 
 if ( $response->is_error ) {
 	print $response->code . " " . $response->message, "\n";
@@ -215,7 +227,17 @@ sub configSanity {
 	if ( !$config->{validate} ) {
 		$config->{validate} = 'false';
 	}
-	debug "Validate (conf file): $config->{validate}";
+	else {
+		debug "Validate (conf file): $config->{validate}";
+	}
+
+	if ( $config->{limit} ) {
+		debug "resume limit set: " . $config->{limit};
+	}
+
+	if ( $config->{resumptionToken} ) {
+		debug "resumptionToken: " . $config->{resumptionToken};
+	}
 
 	return $config;
 }
@@ -281,7 +303,11 @@ sub paramsSanity {
 		exit 1;
 	}
 	debug "Request validates";
-	return $params;
+
+	my $verb = $params->{verb};
+	delete $params->{verb};
+
+	return $verb, $params;
 }
 
 =head1 KNOWN ISSUES

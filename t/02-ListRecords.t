@@ -6,13 +6,13 @@ use warnings;
 use Test::More tests => 3;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use HTTP::OAI::MyHarvester;
+use HTTP::OAI::Harvester::Plus;
 use Debug::Simpler 'debug', 'debug_on';
 use XML::LibXML;
 debug_on();
 
 {
-	my $harvester = new HTTP::OAI::MyHarvester(
+	my $harvester = new HTTP::OAI::Harvester::Plus(
 		baseURL => 'http://spk.mimo-project.eu:8080/oai',
 		resume  => 0,
 	);

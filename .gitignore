@@ -11,5 +11,5 @@ xslt/tron/*
 *.exe
 *.zip.project
 perl.exe.stackdump
-HTTP-OAI-MyHarvester-*
+HTTP-OAI-Harvester-Plus-*
 .project

@@ -1,4 +1,4 @@
-package HTTP::OAI::MyHarvester;
+package HTTP::OAI::Harvester::Plus;
 
 # ABSTRACT: Remedy for my issues with HTTP::OAI::Harvester
 
@@ -7,14 +7,14 @@ use warnings;
 use HTTP::OAI;
 use parent 'HTTP::OAI::Harvester';
 use Debug::Simpler 'debug', 'debug_on';
-use Carp 'carp',            'croak';
+use Carp 'carp';
 use XML::LibXML;
 use XML::LibXSLT;
 use File::Basename qw(dirname);
 use File::Spec;
 use Cwd qw(abs_path);
 
-our $progress;
+our %options; #for progress and limit
 
 debug_on();
 
@@ -34,7 +34,7 @@ debug_on();
 
 For unknown reasons, HTTP::OAI::Harvester's resume function doesn't work for 
 me. This little module acts as a fix for this problem. It also provides a
-method for unwrapping the xml contained in the OAI protocoll. Here again,
+method for unwrapping the xml contained in the OAI protocol. Here again,
 HTTP::OAI::Harvester gives me a problem. The metadata element appears twice.
 My unwrap method silently corrects this error.
 
@@ -62,12 +62,38 @@ sub ListIdentifiers {
 	return $self->_resume($response);
 }
 
-sub register_progress {
+=method $harvester->register(%options);
+
+Register an option with the harvester object. Currently supported
+
+$options{progress}=&callback(); 
+
+Is called on every resume to output a progress status
+
+=cut
+
+sub register {
 	my $self = shift;
-	$progress = shift or return;
-	debug "Register progress";
+	my %opts = @_;
+
+	if ( $opts{progress} ) {
+		debug "Register progress";
+		if (ref $opts{progress} ne 'CODE' ) {
+			carp "Cannot register progress";
+		}
+		$options{progress} = $opts{progress};
+	}
+
+	if ( $opts{limit} ) {
+		if ( $opts{limit} !~ /\d+/ ) {
+			carp "Cannot register limit " . $opts{limit};
+		}
+		debug "Register limit " . $opts{limit};
+		$options{limit} = $opts{limit};
+	}
 }
 
+#depends on resume and stops on limit
 sub _resume {
 	my $self     = shift or die "somethings really wrong";
 	my $response = shift or die "somethings really wrong";
@@ -78,14 +104,18 @@ sub _resume {
 	}
 
 	if ( $response->resumptionToken && $self->{resume} eq 1 ) {
-		while ( my $rt = $response->resumptionToken ) {
-			if ($progress) {
-				&$progress();
-			}
+		my $count = 0;
+		if ( !$options{limit} or $options{limit} < $count ) {
+			while ( my $rt = $response->resumptionToken ) {
+				$count++;
+				if ( $options{progress} ) {
+					&{ $options{progress}() };
+				}
 
-			$response->resume( resumptionToken => $rt );
-			if ( $response->is_error ) {
-				die( "Error resuming: " . $response->message . "\n" );
+				$response->resume( resumptionToken => $rt );
+				if ( $response->is_error ) {
+					die( "Error resuming: " . $response->message . "\n" );
+				}
 			}
 		}
 	}

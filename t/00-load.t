@@ -8,7 +8,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 
 BEGIN {
-    use_ok( 'HTTP::OAI::MyHarvester' ) || print "Bail out!";
+    use_ok( 'HTTP::OAI::Harvester::Plus' ) || print "Bail out!";
 }
 
-diag( "Testing HTTP::OAI::MyHarvester $HTTP::OAI::MyHarvester::VERSION, Perl $], $^X" );
+diag( "Testing HTTP::OAI::Harvester:Plus $HTTP::OAI::Harvester::Plus::VERSION, Perl $], $^X" );

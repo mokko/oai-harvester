@@ -4,9 +4,9 @@
 
 use strict;
 use warnings;
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use HTTP::OAI::MyHarvester;
+#use FindBin;
+#use lib "$FindBin::Bin/../lib";
+use HTTP::OAI::Harvester::Plus;
 use Getopt::Std;
 use Debug::Simpler 'debug', 'debug_on';
 getopts( 'hv', my $opts = {} );
@@ -40,7 +40,7 @@ if ( !$ARGV[1] ) {
 #
 
 my $source = XML::LibXML->load_xml( location => $ARGV[0] );
-my $harvester = new HTTP::OAI::MyHarvester(baseURL=>'test');
+my $harvester = new HTTP::OAI::Harvester::Plus(baseURL=>'test');
 my $dom=$harvester->unwrap ($source);
 output ($dom);
 exit;
