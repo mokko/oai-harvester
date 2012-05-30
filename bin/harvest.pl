@@ -66,6 +66,10 @@ according to OAI Specification Version 2 (see below).
 		true or false
 	validate:
 		true or false
+	chunk: true|false. Instead of writing output to one big file harverster 
+		splits output in several files, where every part consists of the number
+		of pages specified in limit, or if limit unspecified a default
+		value. (TODO) 
 
 Output file can be overwritten with -o option on commandline.
 
@@ -116,14 +120,6 @@ if ( $config->{limit} ) {
 	$harvester->register( limit => $config->{limit} );
 }
 
-#my $response;
-#if ( $config->{resumptionToken} ) {
-#resumptionToken is officially no verb, todo: test
-#	$response =
-#	  $harvester->resumptionToken( resumptionToken =
-#		  $config->{resumptionToken} );
-#}
-#else {
 #act on verb
 my $response = $harvester->$verb( %{$params} );
 
@@ -149,7 +145,9 @@ if ($dom) {
 	output( $dom->toString(1) );
 }
 else {
-	debug "no dom!";
+
+	#could be because nothing is return, right?
+	debug "no return value!";
 }
 
 #difficult not to let validator kill this script if it fails,
@@ -160,6 +158,7 @@ else {
 # SUBS
 #
 
+#process both command-line input and conf file
 sub configSanity {
 	my $configFn = shift;
 
@@ -201,12 +200,6 @@ sub configSanity {
 		debug "Output: STDOUT";
 	}
 
-	#delete old file if any
-	#if (-f $config->{output}) {
-	#	debug "delete old file";
-	#	unlink $config->{output}
-	#}
-
 	if ( $config->{unwrap} ) {
 		if ( $config->{unwrap} eq 'true' ) {
 			debug "Unwrap (conf file): $config->{unwrap}";
@@ -232,6 +225,17 @@ sub configSanity {
 
 	if ( $config->{limit} ) {
 		debug "resume limit set: " . $config->{limit};
+	}
+
+	if ( $config->{chunk} eq 'true' ) {
+		debug "chunking on. Split output in several files";
+		if ( !$config->{limit} ) {
+			debug "Use default limit: $config->{limit} resumes";
+			$config->{limit} = 25;
+		}
+	}
+	else {
+		$config->{chunk} = '';
 	}
 
 	if ( $config->{resumptionToken} ) {

@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-
 use strict;
 use warnings;
 use XML::LibXML;
@@ -12,6 +11,7 @@ use File::Spec 'catfile';
 sub verbose;
 
 #use Data::Dumper qw/Dumper/;
+#part of my oai harverster
 
 our $catalog = load_catalog('.validate.yml');
 
@@ -140,4 +140,10 @@ sub verbose {
 		}
 	}
 }
+=head1 SEE ALSO
 
+https://github.com/mokko/oai-harvester
+
+=cut
+
+1;

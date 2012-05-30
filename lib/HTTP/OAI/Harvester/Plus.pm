@@ -133,7 +133,8 @@ sub _getDom {
 	my $input = shift or return;
 
 	if (   ref $input eq 'HTTP::OAI::ListRecords'
-		or ref $input eq 'HTTP::OAI::ListIdentifiers' )
+		or ref $input eq 'HTTP::OAI::ListIdentifiers'
+		or ref $input eq 'HTTP::OAI::GetRecord' )
 	{
 		return $input->toDOM;
 	}
@@ -171,7 +172,7 @@ sub unwrap {
 	if ( ref $dom !~ /^XML::LibXML::Document/ ) {
 		carp "Input is not the right object:" . ref $dom;
 	}
-	my $xsl_fn = _findFile() or return;
+	my $xsl_fn = _findFile() or carp "unwrap.xsl not found!" ;
 
 	my $style_doc = XML::LibXML->load_xml(
 		location => $xsl_fn,
