@@ -8,9 +8,11 @@ use warnings;
 use Cwd 'realpath';
 use File::Spec;
 use Getopt::Std;
+use XML::SAX::Writer;
+use Encode qw/encode_utf8/;    #encoding problem when dealing with data from sqlite
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
+#use FindBin;
+#use lib "$FindBin::Bin/../lib";
 
 use HTTP::OAI::Harvester::Plus;
 use HTTP::OAI::Repository qw/validate_request/;
@@ -138,17 +140,22 @@ if ( $config->{unwrap} eq 'true' ) {
 	$dom = $harvester->unwrap($response);
 }
 else {
-	$dom = $response->toDOM;
+	#$dom = $response->toDOM;
+	my $xml;
+	$response->set_handler( XML::SAX::Writer->new( Output => \$xml ) );
+	$response->generate;
+	encode_utf8($xml);
+	output ($xml);	
 }
 
-if ($dom) {
-	output( $dom->toString(1) );
-}
-else {
-
+#if ($dom) {
+#	output( $dom->toString(1) );
+#}
+#else {
+#
 	#could be because nothing is return, right?
-	debug "no return value!";
-}
+#	debug "no return value!";
+#}
 
 #difficult not to let validator kill this script if it fails,
 #so put him at the end
@@ -227,7 +234,7 @@ sub configSanity {
 		debug "resume limit set: " . $config->{limit};
 	}
 
-	if ( $config->{chunk} eq 'true' ) {
+	if ( $config->{chunk} && $config->{chunk} eq 'true' ) {
 		debug "chunking on. Split output in several files";
 		if ( !$config->{limit} ) {
 			debug "Use default limit: $config->{limit} resumes";
