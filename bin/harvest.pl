@@ -9,7 +9,7 @@ use Cwd 'realpath';
 use File::Spec;
 use Getopt::Std;
 use XML::SAX::Writer;
-use Encode qw/encode_utf8/;    #encoding problem when dealing with data from sqlite
+use Encode qw/encode_utf8/; #encoding problem when dealing with data from sqlite
 
 #use FindBin;
 #use lib "$FindBin::Bin/../lib";
@@ -64,6 +64,7 @@ according to OAI Specification Version 2 (see below).
 		resumptionToken as string 
 	limit: 5
 	    number of times ListRecord and ListIdentifiers should resume.
+	    A limit of 0 resumes until done.
 	unwrap:
 		true or false
 	validate:
@@ -118,7 +119,7 @@ else {
 my $harvester = new HTTP::OAI::Harvester::Plus(%args) or die "No harvester";
 $harvester->register( progress => sub { $|++; print '.'; } );
 
-if ( $config->{limit} ) {
+if ( $config->{limit} && $config->{limit} =~ /\d+/ ) {
 	$harvester->register( limit => $config->{limit} );
 }
 
@@ -135,25 +136,30 @@ if ( $response->is_error ) {
 #
 # OUTPUT
 #
-my $dom;
+my $xml;
+$response->set_handler( XML::SAX::Writer->new( Output => \$xml ) );
+$response->generate;
+encode_utf8($xml);
+
 if ( $config->{unwrap} eq 'true' ) {
-	$dom = $harvester->unwrap($response);
+	debug "Unwrapping";
+	$xml = $harvester->unwrap($xml, $config->{output});
+	#exit 0;
 }
-else {
-	#$dom = $response->toDOM;
-	my $xml;
-	$response->set_handler( XML::SAX::Writer->new( Output => \$xml ) );
-	$response->generate;
-	encode_utf8($xml);
-	output ($xml);	
-}
+
+
+output($xml);
+
+#else {
+#$dom = $response->toDOM;
+#}
 
 #if ($dom) {
 #	output( $dom->toString(1) );
 #}
 #else {
 #
-	#could be because nothing is return, right?
+#could be because nothing is return, right?
 #	debug "no return value!";
 #}
 
@@ -179,7 +185,7 @@ sub configSanity {
 		exit 1;
 	}
 
-	debug "About to load config file ($configFn)";
+	debug "Load config file ($configFn)";
 
 	if ( $opts->{v} ) {
 		Debug::Simpler::debug_on();
@@ -260,25 +266,22 @@ per file.
 =cut
 
 sub output {
-	my $string      = shift;
-	my $file        = shift;
-	my $destination = $config->{output};
-	if ($file) {
-
-		#debug "called with file: $file";
-		$destination = File::Spec->catfile( $config->{output}, $file );
-	}
+	my $string = shift;
 
 	if ( !$string ) {
 		die "Internal Error: Nothing to output!";
 	}
 
 	if ( $config->{output} ) {
-		print 'Write ' . length($string) . " chars to file ($destination)\n";
+		print "\nWrite "
+		  . length($string)
+		  . " chars to file '$config->{output}'\n";
 
-		#' > : encoding( UTF- 8 ) ' seems to work without it
-		open( my $fh, '> ', $destination )
-		  or die 'Error: Cannot write to file:' . $destination . '! ' . $!;
+		# ' > : encoding(UTF-8) ' seems to work without it
+		open( my $fh, '> : encoding(UTF-8)', $config->{output} )
+		  or die 'Error: Cannot write to file:'
+		  . $config->{output} . '! '
+		  . $!;
 		print $fh $string;
 		close $fh;
 	}

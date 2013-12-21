@@ -107,11 +107,22 @@ sub _resume {
 
 	if ( $response->resumptionToken && $self->{resume} eq 1 ) {
 		my $count = 1;
-		while ( my $rt = $response->resumptionToken
-			and ( $count < $options{limit} or !$options{limit} ) )
+		if ( $options{limit} && $options{limit} =~ /\d+/ ) {
+			$options{_limit} = $options{limit};
+		}
+		else {
+			$options{_limit} = 10;
+		}
+
+		while (
+			my $rt = $response->resumptionToken
+			and ( $count < $options{_limit} )
+		  )
 		{
 			$count++;
+			$options{_limit}++ if ( !$options{limit} );
 			_showProgress();
+
 			#debug "limit VS count: $options{limit} < $count ";
 
 			$response->resume( resumptionToken => $rt );
@@ -167,12 +178,15 @@ does not work with all metadata formats. It fails with oai_dc for example.
 
 sub unwrap {
 	my $self = shift          or die "Something's wrong!";
-	my $dom  = _getDom(shift) or return;
+	#my $dom  = _getDom(shift) or return;
+	my $string  = shift;
+	my $dom = XML::LibXML->load_xml(string => $string);
+	#my $output_fn=shift or return;
 
-	if ( ref $dom !~ /^XML::LibXML::Document/ ) {
-		carp "Input is not the right object:" . ref $dom;
-	}
-	my $xsl_fn = _findFile() or carp "unwrap.xsl not found!" ;
+	#if ( ref $dom !~ /^XML::LibXML::Document/ ) {
+	#	carp "Input is not the right object:" . ref $dom;
+	#}
+	my $xsl_fn = _findFile() or carp "unwrap.xsl not found!";
 
 	my $style_doc = XML::LibXML->load_xml(
 		location => $xsl_fn,
@@ -180,8 +194,12 @@ sub unwrap {
 	);
 	my $xslt       = XML::LibXSLT->new();
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
-
-	return $stylesheet->transform($dom);
+	#print "DOM:$dom\n";
+	my $results=$stylesheet->transform($dom);
+	return $stylesheet->output_as_chars($results);
+	#$stylesheet->output_file($result, $output_fn)
+	#return $results;
+	#$result=$stylesheet->output_string($result);
 }
 
 =cut
