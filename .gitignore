@@ -13,3 +13,5 @@ xslt/tron/*
 perl.exe.stackdump
 HTTP-OAI-Harvester-Plus-*
 .project
+*.xml
+*.yml

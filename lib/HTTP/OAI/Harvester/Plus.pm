@@ -66,7 +66,7 @@ sub ListIdentifiers {
 
 =method $harvester->register(%options);
 
-Register an option with the harvester object. Currently supported
+Register an option with the harvester object: 
 
 $options{progress}=&callback(); 
 
