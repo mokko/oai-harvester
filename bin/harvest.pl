@@ -215,25 +215,25 @@ sub configSanity {
 
 	if ( $config->{unwrap} ) {
 		if ( $config->{unwrap} eq 'true' ) {
-			debug "Unwrap (conf file): $config->{unwrap}";
+			debug "Unwrap: $config->{unwrap}";
 		}
 
 	}
 	else {
-		debug "Unwrap (conf file): not defined -> false";
+		debug "Unwrap: not defined -> false";
 		$config->{unwrap} = 'false';
 	}
 
 	if ( !$config->{resume} ) {
 		$config->{resume} = 'false';
 	}
-	debug "Resume (conf file): $config->{resume}";
+	debug "Resume: $config->{resume}";
 
 	if ( !$config->{validate} ) {
 		$config->{validate} = 'false';
 	}
 	else {
-		debug "Validate (conf file): $config->{validate}";
+		debug "Validate: $config->{validate}";
 	}
 
 	if ( $config->{limit} ) {
