@@ -16,3 +16,4 @@ HTTP-OAI-Harvester-Plus-*
 *.xml
 *.ymldata/
 data/*
+remote.MIMO.mpx.yml

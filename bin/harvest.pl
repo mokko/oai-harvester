@@ -278,7 +278,7 @@ sub output {
 		  . " chars to file '$config->{output}'\n";
 
 		# ' > : encoding(UTF-8) ' seems to work without it
-		open( my $fh, '> : encoding(UTF-8)', $config->{output} )
+		open( my $fh, '>', $config->{output} )
 		  or die 'Error: Cannot write to file:'
 		  . $config->{output} . '! '
 		  . $!;
