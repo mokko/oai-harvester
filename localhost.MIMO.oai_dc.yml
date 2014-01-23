@@ -1,0 +1,7 @@
+baseURL: http://localhost:3000/oai
+set: MIMO
+verb: ListRecords
+resume: false
+metadataPrefix: oai_dc
+#output: mimo.mpx
+#unwrap: false

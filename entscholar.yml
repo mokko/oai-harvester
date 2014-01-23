@@ -1,0 +1,8 @@
+baseURL: http://entscholar.net/index.php/index/oai
+#set: MIMO
+verb: ListRecords
+metadataPrefix: oai_dc
+resume: false
+
+output: test.xml
+#unwrap: false

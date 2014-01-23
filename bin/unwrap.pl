@@ -41,7 +41,7 @@ if ( !$ARGV[1] ) {
 
 my $source = XML::LibXML->load_xml( location => $ARGV[0] );
 my $harvester = new HTTP::OAI::Harvester::Plus(baseURL=>'test');
-my $dom=$harvester->unwrap ($source);
+my $dom=$harvester->unwrap ($source) or die "no dom!";
 outputDOM ($dom);
 exit 1;
 
@@ -59,6 +59,7 @@ outputs DOM either to file (if ARGV[1] defined) or to STDOUT/
 sub outputDOM {
 	my $result=shift or return;
 	if ($ARGV[1]) {
+		debug $result;
 		$result->toFile ($ARGV[1], '1') or die "Cannot write $ARGV[1]";
 		#1 is a readable format, use 0 to save space
 		#$stylesheet->output_file($result, $ARGV[1]) or die "Cannot write file ($ARGV[1])";

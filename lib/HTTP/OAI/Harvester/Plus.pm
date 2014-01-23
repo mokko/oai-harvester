@@ -24,11 +24,12 @@ debug_on();
  	$response=$harvester->ListRecords (%params);
 	...
 
-	the original interface is imported from HTTP::OAI::Harvester
+	#the original interface is imported from HTTP::OAI::Harvester
+	#additionally
 
 	my $dom=$harvester->unwrap($response);
 
-	new option: progress=>sub{print '.'}
+	#new option for new: progress=>sub{print '.'}
 
 =head1 DESCRIPTION
 
@@ -196,9 +197,9 @@ sub unwrap {
 	my $stylesheet = $xslt->parse_stylesheet($style_doc);
 	#print "DOM:$dom\n";
 	my $results=$stylesheet->transform($dom);
-	return $stylesheet->output_as_chars($results);
-	#$stylesheet->output_file($result, $output_fn)
-	#return $results;
+	#return $stylesheet->output_as_chars($results);
+	#
+	return $results;
 	#$result=$stylesheet->output_string($result);
 }
 
