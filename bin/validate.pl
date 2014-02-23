@@ -4,7 +4,7 @@ use warnings;
 use XML::LibXML;
 use Getopt::Std;
 getopts( 'v', our $opts = {} );
-use YAML::Syck qw/LoadFile/;    #use Dancer ':syntax';
+use YAML::XS qw/LoadFile/;    #use Dancer ':syntax';
 use FindBin;
 use Cwd 'realpath';
 use File::Spec 'catfile';

@@ -1,0 +1,8 @@
+baseURL: http://localhost:3000/oai
+verb: GetRecord
+identifier: spk-berlin.de:EM-objId-255542
+resume: true
+limit: 0
+metadataPrefix: lido
+output: data/255542-localhost-lido.xml
+unwrap: true

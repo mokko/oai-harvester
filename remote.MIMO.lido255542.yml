@@ -1,0 +1,8 @@
+baseURL: http://mimo-project.eu:8080/oai
+verb: GetRecord
+identifier: spk-berlin.de:EM-objId-255542
+resume: true
+limit: 0
+metadataPrefix: lido
+output: data/mimo-remote-255542-lido.xml
+unwrap: true

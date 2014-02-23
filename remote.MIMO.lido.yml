@@ -1,0 +1,8 @@
+baseURL: http://mimo-project.eu:8080/oai
+set: MIMO
+verb: ListRecords
+resume: true
+limit: 0
+metadataPrefix: lido
+output: data/lido.harvest.mpx
+unwrap: true

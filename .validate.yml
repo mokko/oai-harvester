@@ -1,0 +1,6 @@
+mpx: 
+  location: 
+  cache: http://www.mpx.org/mpx
+lido: 
+  location: http://www.lido-schema.org/schema/v1.0/lido-v1.0.xsd
+  cache: /home/maurice/projects/Own/oai-harvester/cache/lido-v1.0.xsd
